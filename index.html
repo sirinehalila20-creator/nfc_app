@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Package Tracker</title>
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#14181f;--muted:#5b6574;--line:#dde2e9;--accent:#0f766e;--on-accent:#fff;--ok:#15803d;--warn:#b45309;--err:#b91c1c;--field:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1318;--card:#171c23;--text:#eef1f5;--muted:#9aa5b4;--line:#2a323d;--accent:#2dd4bf;--on-accent:#042f2c;--ok:#4ade80;--warn:#fbbf24;--err:#f87171;--field:#0f1318}}
+:root[data-theme="dark"]{--bg:#0f1318;--card:#171c23;--text:#eef1f5;--muted:#9aa5b4;--line:#2a323d;--accent:#2dd4bf;--on-accent:#042f2c;--ok:#4ade80;--warn:#fbbf24;--err:#f87171;--field:#0f1318}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:520px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 12px}
+label{display:block;font-size:14px;color:var(--muted);margin:0 0 4px}
+input[type=text],input[type=number],input[type=password]{width:100%;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.row.three{grid-template-columns:1fr 1fr 1fr}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{font:inherit;font-size:14px;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+.chip:active{background:var(--line)}
+details{margin-top:12px}
+summary{cursor:pointer;color:var(--muted);font-size:14px}
+.check{display:flex;gap:10px;align-items:center;margin-top:12px;color:var(--text);font-size:15px}
+.check input{width:20px;height:20px}
+.pw{display:flex;gap:8px}
+.pw button{flex:none}
+pre{margin:0;white-space:pre-wrap;word-break:break-all;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.len{font-size:13px;color:var(--muted);margin-top:6px}
+button{font:inherit;cursor:pointer}
+.btn{width:100%;border:0;border-radius:12px;padding:14px;font-weight:600;background:var(--accent);color:var(--on-accent);margin-top:10px}
+.btn.alt{background:transparent;color:var(--text);border:1px solid var(--line);font-weight:500}
+.btn:disabled{opacity:.5}
+.small{background:transparent;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:0 12px}
+#status{border-radius:12px;padding:12px 14px;margin-top:12px;display:none;font-size:15px;border:1px solid var(--line)}
+#hstatus,#hmsg{border-radius:12px;padding:12px 14px;margin-top:12px;display:none;font-size:15px;border:1px solid var(--line)}
+#hstatus.ok,#hmsg.ok,#status.ok{border-color:var(--ok);color:var(--ok);display:block}
+#hstatus.warn,#hmsg.warn,#status.warn{border-color:var(--warn);color:var(--warn);display:block}
+#hstatus.err,#hmsg.err,#status.err{border-color:var(--err);color:var(--err);display:block}
+#hstatus.info,#hmsg.info,#status.info{color:var(--text);display:block}
+#errs{color:var(--err);font-size:14px;margin:10px 0 0;padding-left:18px}
+.hint{font-size:13px;color:var(--muted);margin-top:14px}
+
+main{padding-bottom:96px}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+.tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:14px;padding:12px 0 10px}
+.tabs button[aria-selected=true]{color:var(--accent);font-weight:600;box-shadow:inset 0 2px 0 var(--accent)}
+[hidden]{display:none!important}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center}
+.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:var(--muted)}
+.stat.bad b{color:var(--err)}.stat.warn b{color:var(--warn)}
+.leg{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.leg header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.leg h3{margin:0;font-size:17px}
+.badge{font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;border:1px solid currentColor}
+.badge.ok{color:var(--ok)}.badge.warn{color:var(--warn)}.badge.bad{color:var(--err)}
+.meta{color:var(--muted);font-size:14px;margin:4px 0 8px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:14px}
+.kv span{color:var(--muted)}
+.inc{margin:10px 0 0;padding:0;list-style:none;font-size:14px}
+.inc li{padding:6px 0;border-top:1px solid var(--line);display:flex;gap:8px}
+.inc .t{color:var(--muted);flex:none}
+.inc .bad{color:var(--err)}.inc .warn{color:var(--warn)}.inc .ok{color:var(--ok)}
+select{width:100%;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+.empty{color:var(--muted);text-align:center;padding:24px 8px}
+.hl{list-style:none;margin:0;padding:0}
+.hl li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.hl li:first-child{border-top:0}
+.hl code{display:block;color:var(--muted);font:13px ui-monospace,Menlo,Consolas,monospace}
+.hl .del{border:1px solid var(--line);background:transparent;color:var(--err);border-radius:8px;padding:6px 10px}
+@media print{.tabs,.noprint{display:none!important}main{padding-bottom:0}}
+</style>
+</head>
+<body>
+<main id="view-config">
+  <h1>Package config</h1>
+  <p class="sub">Set the limits for one package, then tap your phone on the board’s NFC antenna.</p>
+
+  <section class="card">
+    <h2>1 · Package</h2>
+    <label for="id">Shipment ID</label>
+    <input type="text" id="id" maxlength="15" placeholder="SHP1234" autocapitalize="characters" autocomplete="off" spellcheck="false">
+  </section>
+
+  <section class="card">
+    <h2>2 · Limits</h2>
+    <div class="row">
+      <div><label for="tmin">Min temperature (°C)</label><input type="number" id="tmin" value="5" step="0.5" inputmode="decimal"></div>
+      <div><label for="tmax">Max temperature (°C)</label><input type="number" id="tmax" value="30" step="0.5" inputmode="decimal"></div>
+    </div>
+    <div style="margin-top:12px"><label for="hmax">Max humidity (% RH)</label><input type="number" id="hmax" value="70" step="1" inputmode="numeric"></div>
+    <div class="chips" aria-label="Examples">
+      <button class="chip" data-p="2,8,60" type="button">Chilled 2–8 °C</button>
+      <button class="chip" data-p="10,30,70" type="button">Ambient 10–30 °C</button>
+      <button class="chip" data-p="0,40,60" type="button">Electronics 0–40 °C</button>
+    </div>
+    <details>
+      <summary>Advanced</summary>
+      <div class="row">
+        <div><label for="tmar">Warning zone (°C)</label><input type="number" id="tmar" value="1" step="0.5" inputmode="decimal"></div>
+        <div><label for="hmar">Warning zone (% RH)</label><input type="number" id="hmar" value="5" step="1" inputmode="numeric"></div>
+      </div>
+      <label class="check"><input type="checkbox" id="sendtime" checked> Send this phone’s date and time</label>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>3 · Password</h2>
+    <label for="pass">Supervisor password</label>
+    <div class="pw">
+      <input type="password" id="pass" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="small" id="showpw" type="button">Show</button>
+    </div>
+    <p class="hint" style="margin-bottom:0">The board erases the message after reading it, so the password does not stay on the tag.</p>
+  </section>
+
+  <section class="card">
+    <h2>4 · Send to the board</h2>
+    <ul id="errs"></ul>
+    <button class="btn" id="write" type="button">Write to board</button>
+    <button class="btn alt" id="check" type="button">Check the board’s answer</button>
+    <div id="status" role="status" aria-live="polite"></div>
+    <p class="hint">Writing needs Chrome on an Android phone with NFC turned on.</p>
+  </section>
+</main>
+
+<main id="view-hand" hidden>
+  <h1>Handler badges</h1>
+  <p class="sub">Give each badge a name. The board then writes that name in every record.</p>
+  <section class="card">
+    <h2>1 · Add a badge</h2>
+    <label for="hname">Name</label>
+    <input type="text" id="hname" maxlength="11" placeholder="Ali" autocomplete="off" spellcheck="false">
+    <label for="huid" style="margin-top:12px">Badge ID (UID)</label>
+    <div class="pw"><input type="text" id="huid" placeholder="04A1B2C3" autocapitalize="characters" autocomplete="off" spellcheck="false"><button class="small" id="hscan" type="button">Scan</button></div>
+    <button class="btn alt" id="hadd" type="button">Add to the list</button>
+    <div id="hstatus" role="status" aria-live="polite"></div>
+  </section>
+  <section class="card">
+    <h2>2 · Badges in the list</h2>
+    <ul class="hl" id="hlist"></ul>
+  </section>
+  <section class="card">
+    <h2>3 · Send to the board</h2>
+    <label for="apass">Registration password</label>
+    <input type="password" id="apass" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <ul id="herrs"></ul>
+    <button class="btn" id="hwrite" type="button">Write list to board</button>
+    <button class="btn alt" id="hcheck" type="button">Check the board’s answer</button>
+    <div id="hmsg" role="status" aria-live="polite"></div>
+    <p class="hint">This list replaces the board’s whole list. It is kept on this phone only.</p>
+  </section>
+</main>
+<main id="view-report" hidden>
+  <h1>Delivery report</h1>
+  <p class="sub">Load <b>events.csv</b> and <b>legs.csv</b> from the board’s SD card. Files stay on this phone.</p>
+  <section class="card noprint">
+    <label for="files">CSV files</label>
+    <input type="file" id="files" accept=".csv,text/csv,text/plain" multiple>
+    <button class="btn alt" id="demo" type="button">Load demo data</button>
+  </section>
+  <div id="rep"></div>
+  <button class="btn alt noprint" id="print" type="button" hidden>Print or save as PDF</button>
+</main>
+<nav class="tabs" role="tablist">
+  <button role="tab" id="tab-config" aria-selected="true">Configure</button>
+  <button role="tab" id="tab-hand" aria-selected="false">Handlers</button>
+  <button role="tab" id="tab-report" aria-selected="false">Report</button>
+</nav>
+
+<script>
+const $ = id => document.getElementById(id);
+const DEF = { tmar: 1, hmar: 5 };
+
+function isoNow() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+}
+
+function build() {
+  const v = k => $(k).value.trim();
+  const n = k => Number(v(k));
+  const errs = [];
+  if (!/^[A-Za-z0-9_-]{1,15}$/.test(v('id'))) errs.push('Shipment ID: 1–15 letters, digits, “-” or “_”.');
+  if (!isFinite(n('tmin')) || !isFinite(n('tmax')) || v('tmin') === '' || v('tmax') === '') errs.push('Enter both temperatures.');
+  else {
+    if (n('tmin') < -40 || n('tmax') > 85) errs.push('Temperatures must be between −40 and 85 °C.');
+    if (n('tmin') >= n('tmax')) errs.push('Min temperature must be lower than max.');
+  }
+  if (!(n('hmax') >= 1 && n('hmax') <= 100)) errs.push('Max humidity must be between 1 and 100 %.');
+  if (!(n('tmar') >= 0.1 && n('tmar') <= 10)) errs.push('Temperature warning zone: 0.1–10 °C.');
+  if (!(n('hmar') >= 1 && n('hmar') <= 30)) errs.push('Humidity warning zone: 1–30 %.');
+  const pass = $('pass').value;
+  if (!pass) errs.push('Enter the supervisor password.');
+  else if (pass.includes(';')) errs.push('The password cannot contain “;”.');
+
+  const parts = ['id=' + v('id'), 'tmax=' + n('tmax'), 'tmin=' + n('tmin'), 'hmax=' + n('hmax')];
+  if (n('tmar') !== DEF.tmar) parts.push('tmar=' + n('tmar'));
+  if (n('hmar') !== DEF.hmar) parts.push('hmar=' + n('hmar'));
+  const head = parts.join(';');
+  const tail = ($('sendtime').checked ? ';t=' + isoNow() : '');
+  return { errs, text: head + ';pass=' + pass + tail };
+}
+
+function refresh() {
+  const r = build();
+  const L = new TextEncoder().encode(r.text).length;
+  const errs = r.errs.slice();
+  if (L > 150) errs.push('Message too long: shorten the ID or password.');
+  $('errs').innerHTML = '';
+  errs.forEach(e => { const li = document.createElement('li'); li.textContent = e; $('errs').appendChild(li); });
+  return { r, ok: errs.length === 0 };
+}
+
+function say(msg, kind, id = 'status') { const s = $(id); s.className = kind; s.textContent = msg; }
+
+function explain(e) {
+  if (e.name === 'NotAllowedError') return 'NFC was blocked. Allow NFC for this page, and open it directly in Chrome (not inside another app).';
+  if (e.name === 'NotSupportedError') return 'NFC is turned off on this phone. Switch it on in the settings.';
+  if (e.name === 'AbortError') return 'Cancelled.';
+  return 'Could not talk to the tag. Keep the phone still on the antenna and try again.';
+}
+
+async function writeTag() {
+  const { r, ok } = refresh();
+  if (!ok) return say('Fix the points listed above first.', 'warn');
+  if (!('NDEFReader' in window)) return say('Writing is not available here. Open this page in Chrome on an Android phone with NFC turned on.', 'warn');
+  try {
+    say('Hold the phone on the board’s NFC antenna…', 'info');
+    await new NDEFReader().write({ records: [{ recordType: 'text', data: r.text, lang: 'en' }] });
+    say('Written. The board answers within about 3 seconds. Lift the phone away, then press “Check the board’s answer” and tap the antenna again.', 'ok');
+  } catch (e) { say(explain(e), 'err'); }
+}
+
+async function checkTag(target = 'status') {
+  if (!('NDEFReader' in window)) return say('Reading is not available here. Read the tag with NFC Tools or ST25 NFC Tap.', 'warn', target);
+  const ab = new AbortController(), ndef = new NDEFReader();
+  let done = false, timer = null;
+  const finish = (msg, kind) => { if (done) return; done = true; clearTimeout(timer); ab.abort(); say(msg, kind, target); };
+  timer = setTimeout(() => finish('No tag was detected within 15 seconds. Lift the phone away from the board, then bring it to the antenna again.', 'warn'), 15000);
+  ndef.onreadingerror = () => finish('A tag was found but its content could not be read. Try once more; if it repeats, read the tag with NFC Tools to see what it holds.', 'err');
+  ndef.onreading = ev => {
+    const recs = ev.message.records;
+    let text = null;
+    for (const rec of recs) if (rec.recordType === 'text') { text = new TextDecoder(rec.encoding || 'utf-8').decode(rec.data).trim(); break; }
+    if (text === 'OK') finish('✓ The board accepted it.', 'ok');
+    else if (text === 'ERR PASS') finish('✗ Wrong supervisor password. Nothing was changed.', 'err');
+    else if (text === 'ERR APASS') finish('✗ Wrong registration password. Nothing was changed.', 'err');
+    else if (text === 'ERR FULL') finish('✗ Too many badges: the board keeps 8 at most.', 'err');
+    else if (text === 'ERR BUSY') finish('✗ A delivery is still open. Close it with the handler’s second tap, then write again.', 'err');
+    else if (text === 'ERR FORMAT') finish('✗ The board could not read the message. Check the values and write again.', 'err');
+    else if (text && text.includes('pass=')) finish('The board has not read the message yet: it is still on the tag. Check the board is running and watch its terminal.', 'warn');
+    else if (!recs.length) finish('The tag is empty. If you just wrote something, the board erased it but left no answer: check its terminal.', 'warn');
+    else finish('The tag holds: “' + (text === null ? 'no text record' : text.slice(0, 60)) + '”', 'warn');
+  };
+  try {
+    say('Lift the phone away from the board if it is still on it, then bring it to the NFC antenna…', 'info', target);
+    await ndef.scan({ signal: ab.signal });
+  } catch (e) { finish(explain(e), 'err'); }
+}
+
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  const [a, b, h] = c.dataset.p.split(',');
+  $('tmin').value = a; $('tmax').value = b; $('hmax').value = h; refresh();
+}));
+$('showpw').addEventListener('click', () => {
+  const t = $('pass').type === 'password'; $('pass').type = t ? 'text' : 'password'; $('showpw').textContent = t ? 'Hide' : 'Show';
+});
+['id', 'tmin', 'tmax', 'hmax', 'tmar', 'hmar', 'pass', 'sendtime'].forEach(k => $(k).addEventListener('input', refresh));
+$('write').addEventListener('click', writeTag);
+$('check').addEventListener('click', () => checkTag());
+refresh();
+
+
+/* ===== Handler badges ===== */
+const HKEY = 'pkg_handlers';
+let HL = [];
+try { HL = JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch (e) { HL = []; }
+const saveHL = () => { try { localStorage.setItem(HKEY, JSON.stringify(HL)); } catch (e) {} };
+
+function renderHL() {
+  const ul = $('hlist'); ul.innerHTML = '';
+  if (!HL.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'No badge yet.'; ul.appendChild(li); }
+  HL.forEach((h, i) => {
+    const li = document.createElement('li'), box = document.createElement('div'), b = document.createElement('b'), c = document.createElement('code'), x = document.createElement('button');
+    b.textContent = h.name; c.textContent = h.uid; box.appendChild(b); box.appendChild(c);
+    x.className = 'del'; x.type = 'button'; x.textContent = 'Remove';
+    x.addEventListener('click', () => { HL.splice(i, 1); saveHL(); renderHL(); });
+    li.appendChild(box); li.appendChild(x); ul.appendChild(li);
+  });
+}
+
+const cleanUid = s => s.replace(/[^0-9a-f]/gi, '').toUpperCase();
+const UID_OK = /^([0-9A-F]{8}|[0-9A-F]{14}|[0-9A-F]{20})$/;
+
+function addBadge() {
+  const name = $('hname').value.trim(), uid = cleanUid($('huid').value);
+  if (!/^[A-Za-z0-9_-]{1,11}$/.test(name)) return say('Name: 1–11 letters, digits, “-” or “_” (no spaces).', 'warn', 'hstatus');
+  if (!UID_OK.test(uid)) return say('Badge ID: 8, 14 or 20 hexadecimal characters, for example 04A1B2C3.', 'warn', 'hstatus');
+  const i = HL.findIndex(h => h.uid === uid);
+  if (i >= 0) HL[i].name = name;
+  else if (HL.length >= 8) return say('The board keeps 8 badges at most.', 'warn', 'hstatus');
+  else HL.push({ name, uid });
+  saveHL(); renderHL(); $('hname').value = ''; $('huid').value = '';
+  say('Added. Add the next badge, or go to step 3 to send the list.', 'ok', 'hstatus');
+}
+
+async function scanBadge() {
+  if (!('NDEFReader' in window)) return say('Scanning is not available here. Tap the badge on the PN532 and copy its ID from the terminal (UNKNOWN_BADGE line).', 'warn', 'hstatus');
+  const ab = new AbortController(), ndef = new NDEFReader();
+  let done = false, timer = null;
+  const stop = (m, k) => { if (done) return; done = true; clearTimeout(timer); ab.abort(); say(m, k, 'hstatus'); };
+  timer = setTimeout(() => stop('No badge detected. Try again.', 'warn'), 15000);
+  const manual = 'The phone cannot read this badge’s ID. Tap it on the PN532 and copy the ID from the terminal (UNKNOWN_BADGE line).';
+  ndef.onreadingerror = () => stop(manual, 'warn');
+  ndef.onreading = ev => {
+    const uid = cleanUid(ev.serialNumber || '');
+    if (UID_OK.test(uid)) { $('huid').value = uid; stop('Badge read. Type its name and press “Add to the list”.', 'ok'); }
+    else stop(manual, 'warn');
+  };
+  try { say('Hold the badge against the back of the phone…', 'info', 'hstatus'); await ndef.scan({ signal: ab.signal }); }
+  catch (e) { stop(explain(e), 'err'); }
+}
+
+function buildAdmin() {
+  const errs = [], pw = $('apass').value;
+  if (!HL.length) errs.push('Add at least one badge first.');
+  if (!pw) errs.push('Enter the registration password.');
+  else if (pw.includes(';')) errs.push('The password cannot contain “;”.');
+  const text = 'apass=' + pw + ';clr=1;' + HL.map(h => 'add=' + h.uid + ',' + h.name).join(';');
+  if (new TextEncoder().encode(text).length > 190) errs.push('Too many or too long names for one message: remove a badge or shorten the names.');
+  return { errs, text };
+}
+
+async function writeHL() {
+  const { errs, text } = buildAdmin();
+  $('herrs').innerHTML = '';
+  errs.forEach(e => { const li = document.createElement('li'); li.textContent = e; $('herrs').appendChild(li); });
+  if (errs.length) return say('Fix the points listed above first.', 'warn', 'hmsg');
+  if (!('NDEFReader' in window)) return say('Writing is not available here. Open this page in Chrome on an Android phone with NFC turned on.', 'warn', 'hmsg');
+  try {
+    say('Hold the phone on the board’s NFC antenna…', 'info', 'hmsg');
+    await new NDEFReader().write({ records: [{ recordType: 'text', data: text, lang: 'en' }] });
+    say('Written. The board answers within about 3 seconds. Lift the phone away, then press “Check the board’s answer” and tap the antenna again.', 'ok', 'hmsg');
+  } catch (e) { say(explain(e), 'err', 'hmsg'); }
+}
+
+$('hadd').addEventListener('click', addBadge);
+$('hscan').addEventListener('click', scanBadge);
+$('hwrite').addEventListener('click', writeHL);
+$('hcheck').addEventListener('click', () => checkTag('hmsg'));
+renderHL();
+
+/* ===== Report ===== */
+function parseCSV(t){const L=t.replace(/\r/g,'').split('\n').filter(x=>x.trim());if(!L.length)return[];const k=L.shift().split(',');return L.map(l=>{const c=l.split(','),o={};k.forEach((x,i)=>o[x.trim()]=(c[i]||'').trim());return o;});}
+function ts(t){const m=/^T\+(\d+)s$/.exec(t||'');return m?+m[1]:Date.parse((t||'').replace(' ','T'))/1000;}
+const LABEL={PICKUP:'Picked up',ARRIVAL:'Delivered',T_WARN_HIGH:'Temperature near max',T_WARN_LOW:'Temperature near min',T_ALARM_HIGH:'Temperature above max',T_ALARM_LOW:'Temperature below min',T_OK:'Temperature back in range',H_WARN_HIGH:'Humidity near max',H_ALARM_HIGH:'Humidity above max',H_OK:'Humidity back in range',SHOCK:'Shock',CONFIG_OK:'Configured',UNKNOWN_BADGE:'Unknown badge',TAP_REFUSED:'Tap refused'};
+const UNIT=e=>/^T_/.test(e)?' °C':/^H_/.test(e)?' %':e==='SHOCK'?' g':'';
+const SEV=e=>/ALARM|SHOCK|UNKNOWN/.test(e)?'bad':/WARN|REFUSED/.test(e)?'warn':'ok';
+const isInc=e=>/ALARM|WARN/.test(e);
+function dur(a,b){const s=Math.max(0,Math.round(b-a));return s<60?s+' s':Math.floor(s/60)+' min '+(s%60)+' s';}
+
+/* legs + events of one shipment -> data to display */
+function analyse(legs,events,ship){
+  const ev=events.filter(e=>e.shipment===ship).map(e=>({...e,t:ts(e.time)})).sort((a,b)=>a.t-b.t);
+  const out=legs.filter(l=>l.shipment===ship).map(l=>{
+    const a=ts(l.pickup),b=ts(l.arrival);
+    const inc=ev.filter(e=>e.handler===l.handler&&e.t>=a&&e.t<=b&&isInc(e.event));
+    const status=inc.some(e=>SEV(e.event)==='bad')?'bad':inc.length?'warn':'ok';
+    return {...l,a,b,inc,status,dur:dur(a,b)};
+  }).sort((x,y)=>x.a-y.a);
+  const all=out.flatMap(l=>l.inc);
+  return {legs:out,events:ev,
+    alarms:all.filter(e=>/ALARM/.test(e.event)).length,
+    shocks:all.filter(e=>e.event==='SHOCK').length,
+    warns:all.filter(e=>/WARN/.test(e.event)).length};
+}
+
+let DATA={legs:[],events:[]};
+const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
+
+function renderReport(){
+  const root=$('rep');root.innerHTML='';$('print').hidden=true;
+  const ships=[...new Set([...DATA.legs,...DATA.events].map(r=>r.shipment).filter(Boolean))];
+  if(!DATA.legs.length){root.appendChild(el('p','empty','Load legs.csv (and events.csv) to see the report.'));return;}
+  const sel=el('select');sel.className='noprint';ships.forEach(s=>{const o=el('option','',s);o.value=s;sel.appendChild(o);});
+  if(window.__ship&&ships.includes(window.__ship))sel.value=window.__ship;
+  const box=el('div');root.appendChild(sel);root.appendChild(box);
+  const draw=()=>{
+    window.__ship=sel.value;box.innerHTML='';
+    const d=analyse(DATA.legs,DATA.events,sel.value);
+    const st=el('div','stats');
+    [['Legs',d.legs.length,''],['Alarms',d.alarms,d.alarms?'bad':''],['Warnings',d.warns,d.warns?'warn':'']].forEach(([k,v,c])=>{const s=el('div','stat '+c);s.appendChild(el('b','',v));s.appendChild(el('span','',k));st.appendChild(s);});
+    st.style.marginTop='14px';box.appendChild(st);
+    d.legs.forEach(l=>{
+      const c=el('div','leg'),hd=el('header');
+      hd.appendChild(el('h3','',l.handler));
+      hd.appendChild(el('span','badge '+l.status,l.status==='ok'?'All good':l.status==='warn'?'Warning':'Incident'));
+      c.appendChild(hd);
+      c.appendChild(el('div','meta',l.pickup+'  →  '+l.arrival+'  ·  '+l.dur));
+      const kv=el('div','kv');
+      [['Temperature',l.tmin+' to '+l.tmax+' °C (avg '+l.tavg+')'],['Humidity',l.hmin+' to '+l.hmax+' %']].forEach(([k,v])=>{const r=el('div');r.appendChild(el('span','',k+': '));r.appendChild(document.createTextNode(v));kv.appendChild(r);});
+      c.appendChild(kv);
+      if(l.inc.length){const ul=el('ul','inc');l.inc.forEach(e=>{const li=el('li');li.appendChild(el('span','t',e.time));li.appendChild(el('span',SEV(e.event),(LABEL[e.event]||e.event)+(e.value&&e.value!=='-'?' · '+e.value+UNIT(e.event):'')));ul.appendChild(li);});c.appendChild(ul);}
+      box.appendChild(c);
+    });
+    if(d.events.length){const dt=el('details');dt.appendChild(el('summary','','All events ('+d.events.length+')'));const ul=el('ul','inc');
+      d.events.forEach(e=>{const li=el('li');li.appendChild(el('span','t',e.time));li.appendChild(el('span',SEV(e.event),e.handler+' · '+(LABEL[e.event]||e.event)+(e.value&&e.value!=='-'?' · '+e.value+UNIT(e.event):'')));ul.appendChild(li);});
+      dt.appendChild(ul);box.appendChild(dt);}
+    $('print').hidden=false;
+  };
+  sel.addEventListener('change',draw);draw();
+}
+
+async function loadFiles(list){
+  for(const f of list){const t=await f.text(),head=(t.split('\n')[0]||'').toLowerCase();
+    if(head.includes('event'))DATA.events=parseCSV(t);else if(head.includes('pickup'))DATA.legs=parseCSV(t);}
+  renderReport();
+}
+const DEMO_L='shipment,handler,pickup,arrival,tmin,tmax,tavg,hmin,hmax,shocks\nSHP1,Ali,2026-11-09 08:00:00,2026-11-09 09:10:00,4.1,7.2,5.6,42.0,55.0,0\nSHP1,Sara,2026-11-09 09:15:00,2026-11-09 11:40:00,5.0,9.4,7.1,44.0,63.0,0';
+const DEMO_E='time,shipment,handler,event,value\n2026-11-09 08:00:00,SHP1,Ali,PICKUP,-\n2026-11-09 09:10:00,SHP1,Ali,ARRIVAL,-\n2026-11-09 09:15:00,SHP1,Sara,PICKUP,-\n2026-11-09 10:02:11,SHP1,Sara,T_WARN_HIGH,7.6\n2026-11-09 10:48:30,SHP1,Sara,T_ALARM_HIGH,8.6\n2026-11-09 10:55:02,SHP1,Sara,T_OK,7.1\n2026-11-09 11:40:00,SHP1,Sara,ARRIVAL,-';
+
+function tab(name){
+  ['config','hand','report'].forEach(k=>{$('view-'+k).hidden=k!==name;$('tab-'+k).setAttribute('aria-selected',k===name);});
+  window.scrollTo(0,0);
+}
+$('tab-config').addEventListener('click',()=>tab('config'));
+$('tab-hand').addEventListener('click',()=>tab('hand'));
+$('tab-report').addEventListener('click',()=>tab('report'));
+$('files').addEventListener('change',e=>loadFiles(e.target.files));
+$('demo').addEventListener('click',()=>{DATA={legs:parseCSV(DEMO_L),events:parseCSV(DEMO_E)};renderReport();});
+$('print').addEventListener('click',()=>window.print());
+renderReport();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
